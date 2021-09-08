@@ -16,99 +16,18 @@ rbtree *new_rbtree(void) {
   return p;
 }
 
-void rotate_left(rbtree *t, node_t *x) {
-  node_t *y = x->right;
-  x->right = y->left;
-  if (y->left != NULL) {
-    y->left->parent = x;
-  }
-  y->parent = x->parent;
-  // x가 root인 경우
-  if(x->parent == NULL) {
-    t->root = y;
-  }
-  // x가 왼쪽자식인 경우
-  else if(x == x->parent->left) {
-    x->parent->left = y;
-  }
-  //x가 오른쪽자식인 경우
-  else {
-    x->parent->right = y;
-  }
-  // 마지막으로 y의 왼쪽자식과  x의 부모노드 업데이트
-  y->left = x;
-  x->parent = y;
-}
-
-void rotate_right(rbtree *t, node_t *x) {
-  node_t *y = x->left;
-  x->left = y->right;
-  if (y->right != NULL) {
-    y->right->parent = x;
-  }
-  y->parent = x->parent;
-  // x가 root인 경우
-  if(x->parent == NULL) {
-    t->root = y;
-  }
-  // x가 왼쪽자식인 경우
-  else if(x == x->parent->left) {
-    x->parent->left = y;
-  }
-  //x가 오른쪽자식인 경우
-  else {
-    x->parent->right = y;
-  }
-  // 마지막으로 y의 왼쪽자식과  x의 부모노드 업데이트
-  y->right = x;
-  x->parent = y;
-}
-
-// 조부모 노드 반환
-node_t *grandparent(node_t *n) {
-  if ((n != NULL) && (n->parent != NULL)) {
-    return n->parent->parent;
-  }
-  else {
-    return NULL;
-  }
-}
-
-// 삼촌 노드 반환
-node_t *uncle(node_t *n) {
-  node_t *grand_parent_node = grandparent(n);
-  if (grand_parent_node == NULL) {
-    return NULL;
-  }
-  else {
-    if (grand_parent_node->left == n->parent) {
-      return grand_parent_node->right;
-    }
-    else {
-      return grand_parent_node->left;
-    }
-  }
-}
-
-// 형제 노드 반환
-node_t *sibling(node_t *n) {
-  if (n->parent == NULL) {
-    return NULL;
-  }
-  else {
-    if (n->parent->left == n) {
-      return n->parent->right;
-    }
-    else{
-      return n->parent->left;
-    }
-  }
-}
-
 // tree 전체 노드를 free
 void delete_rbtree(rbtree *t) {
-  // TODO: implement delete_rbtree
+  delete_node(t->root);
   free(t);
+}
+
+void delete_node(node_t *p) {
+  if (p != NULL) {
+    delete_node(p);
+    delete_node(p);
+    free(p);
+  }
 }
 
 // key값을 가지고 tree에 insert
@@ -285,24 +204,8 @@ int rbtree_erase(rbtree *t, node_t *p) {
   return 0;
 }
 
-
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
   return 0;
-}
-
-// 전위순회로 tree node 출력
-void inorder(node_t *p) {
-  if(p != NULL) {
-    inorder(p->left);
-    printf("key: %d, color: %d \n", p->key, p->color);
-    inorder(p->right);
-  }
-}
-
-// 특정 key값을 받으면 해당 노드의 정보 출력
-void node_info(rbtree *t, const key_t key) {
-  node_t *tmp = rbtree_find(t, key);
-  printf("key: %d, color: %d, add: %p", tmp->key, tmp->color, tmp);
 }
 
 void replace_node(node_t *n, node_t *c) {
@@ -448,5 +351,109 @@ void delete_case6(rbtree *t, node_t *n) {
       s->left->color = RBTREE_BLACK;
     }
     rotate_right(t, n->parent);
+  }
+}
+
+// 전위순회로 tree node 출력
+void inorder(node_t *p) {
+  if(p != NULL) {
+    inorder(p->left);
+    printf("key: %d, color: %d \n", p->key, p->color);
+    inorder(p->right);
+  }
+}
+
+// 특정 key값을 받으면 해당 노드의 정보 출력
+void node_info(rbtree *t, const key_t key) {
+  node_t *tmp = rbtree_find(t, key);
+  printf("key: %d, color: %d, add: %p", tmp->key, tmp->color, tmp);
+}
+
+void rotate_left(rbtree *t, node_t *x) {
+  node_t *y = x->right;
+  x->right = y->left;
+  if (y->left != NULL) {
+    y->left->parent = x;
+  }
+  y->parent = x->parent;
+  // x가 root인 경우
+  if(x->parent == NULL) {
+    t->root = y;
+  }
+  // x가 왼쪽자식인 경우
+  else if(x == x->parent->left) {
+    x->parent->left = y;
+  }
+  //x가 오른쪽자식인 경우
+  else {
+    x->parent->right = y;
+  }
+  // 마지막으로 y의 왼쪽자식과  x의 부모노드 업데이트
+  y->left = x;
+  x->parent = y;
+}
+
+void rotate_right(rbtree *t, node_t *x) {
+  node_t *y = x->left;
+  x->left = y->right;
+  if (y->right != NULL) {
+    y->right->parent = x;
+  }
+  y->parent = x->parent;
+  // x가 root인 경우
+  if(x->parent == NULL) {
+    t->root = y;
+  }
+  // x가 왼쪽자식인 경우
+  else if(x == x->parent->left) {
+    x->parent->left = y;
+  }
+  //x가 오른쪽자식인 경우
+  else {
+    x->parent->right = y;
+  }
+  // 마지막으로 y의 왼쪽자식과  x의 부모노드 업데이트
+  y->right = x;
+  x->parent = y;
+}
+
+// 조부모 노드 반환
+node_t *grandparent(node_t *n) {
+  if ((n != NULL) && (n->parent != NULL)) {
+    return n->parent->parent;
+  }
+  else {
+    return NULL;
+  }
+}
+
+// 삼촌 노드 반환
+node_t *uncle(node_t *n) {
+  node_t *grand_parent_node = grandparent(n);
+  if (grand_parent_node == NULL) {
+    return NULL;
+  }
+  else {
+    if (grand_parent_node->left == n->parent) {
+      return grand_parent_node->right;
+    }
+    else {
+      return grand_parent_node->left;
+    }
+  }
+}
+
+// 형제 노드 반환
+node_t *sibling(node_t *n) {
+  if (n->parent == NULL) {
+    return NULL;
+  }
+  else {
+    if (n->parent->left == n) {
+      return n->parent->right;
+    }
+    else{
+      return n->parent->left;
+    }
   }
 }
