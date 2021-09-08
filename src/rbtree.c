@@ -105,9 +105,16 @@ node_t *sibling(node_t *n) {
   }
 }
 
+void delete_node(node_t *p) {
+  if (p != NULL) {
+    delete_node(p);
+    delete_node(p);
+    free(p);
+  }
+}
 // tree 전체 노드를 free
 void delete_rbtree(rbtree *t) {
-  // TODO: implement delete_rbtree
+  delete_node(t->root);
   free(t);
 }
 
@@ -285,24 +292,23 @@ int rbtree_erase(rbtree *t, node_t *p) {
   return 0;
 }
 
+void inorder_array(node_t *p, key_t *arr, const size_t n, int *i) {
+  if (p == NULL ) {
+    return;
+  }
+  inorder_array(p->left, arr, n, i);
+  if(*i < n) {
+    arr[*i] = p->key;
+    *i ++;
+  }
+  inorder_array(p->right, arr, n, i);
+}
 
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
+  int i = 0;
+  node_t *tmp = t->root;
+  inorder_array(tmp, arr, n, &i);
   return 0;
-}
-
-// 전위순회로 tree node 출력
-void inorder(node_t *p) {
-  if(p != NULL) {
-    inorder(p->left);
-    printf("key: %d, color: %d \n", p->key, p->color);
-    inorder(p->right);
-  }
-}
-
-// 특정 key값을 받으면 해당 노드의 정보 출력
-void node_info(rbtree *t, const key_t key) {
-  node_t *tmp = rbtree_find(t, key);
-  printf("key: %d, color: %d, add: %p", tmp->key, tmp->color, tmp);
 }
 
 void replace_node(node_t *n, node_t *c) {
@@ -449,4 +455,19 @@ void delete_case6(rbtree *t, node_t *n) {
     }
     rotate_right(t, n->parent);
   }
+}
+
+// 전위순회로 tree node 출력
+void inorder(node_t *p) {
+  if(p != NULL) {
+    inorder(p->left);
+    printf("key: %d, color: %d \n", p->key, p->color);
+    inorder(p->right);
+  }
+}
+
+// 특정 key값을 받으면 해당 노드의 정보 출력
+void node_info(rbtree *t, const key_t key) {
+  node_t *tmp = rbtree_find(t, key);
+  printf("key: %d, color: %d, add: %p", tmp->key, tmp->color, tmp);
 }
