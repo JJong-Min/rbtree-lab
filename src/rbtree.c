@@ -56,7 +56,11 @@ void right_rotate(rbtree *t, node_t *x) {
 }
 
 void delete_rbtree(rbtree *t) {
-  // TODO: reclaim the tree nodes's memory
+  node_t * x = t->root;
+  node_t * left_child;
+  node_t * right_child;
+  
+
   free(t);
 }
 
@@ -67,33 +71,46 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
   tmp->right = NULL;
   tmp->parent = NULL;
   // root가 없는경우
-  if (t == NULL) {
+  if (t->root == NULL) {
     tmp->color = RBTREE_BLACK;
     t->root = tmp;
+    return t->root;
   }
   // root가 있는 경우
   else {
     node_t *prev = t->root;
-    while(prev != NULL) {
-      if (key < prev->key) {
-        prev = prev->left;
+    while(1) {
+      if (prev->key > key) {
+        if(prev->left != NULL) {
+          prev = prev->left;
+        }
+        else {
+          prev->left = tmp;
+          tmp->parent = prev;
+          tmp->color = RBTREE_RED;
+          break;
+        }
       }
       else {
-        prev = prev->right;
+        if(prev->right != NULL) {
+          prev = prev->right;
+        }
+        else {
+          prev->right = tmp;
+          tmp->parent = prev;
+          tmp->color = RBTREE_RED;
+          break;
+        }
+      }
       }
     }
-
-    tmp->parent = prev;
-    tmp->color = RBTREE_RED;
-  }
-
-  while (tmp->parent->color == RBTREE_RED) {
+  while (tmp->parent !=NULL && tmp->parent->color == RBTREE_RED) {
     //new node의 부모노드가 왼쪽자식인 경우
     if (tmp->parent == tmp->parent->parent->left) {
       // 부모노드의 형제노드 정의
       node_t *uncle = tmp->parent->parent->right;
       // case1(uncle's color is RED)
-      if (uncle->color == RBTREE_RED) {
+      if (uncle!=NULL&&uncle->color == RBTREE_RED) {
         tmp->parent->color = RBTREE_BLACK;
         uncle->color = RBTREE_BLACK;
         tmp->parent->parent->color = RBTREE_RED;
@@ -102,7 +119,7 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
       //case2 or case3(uncle's color is BLACK)
       else{
         //case2
-        if (tmp->parent->right = tmp) {
+        if (tmp->parent->right == tmp) {
           tmp = tmp->parent;
           left_rotate(t, tmp);
         }
@@ -117,7 +134,7 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
       // 부모노드의 형제노드(uncle) 정의
       node_t *uncle = tmp->parent->parent->left;
       //case4(uncle's color is RED)
-      if(uncle->color == RBTREE_RED) {
+      if(uncle!=NULL&&uncle->color == RBTREE_RED ) {
         tmp->parent->color = RBTREE_BLACK;
         uncle->color = RBTREE_BLACK;
         tmp->parent->parent->color = RBTREE_RED;
@@ -126,14 +143,14 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
       //case5 or case6
       else { 
         //case5
-        if(tmp = tmp->parent->left) {
+        if(tmp == tmp->parent->left) {
           tmp = tmp->parent;
-          left_rotate(t, tmp);
+          right_rotate(t, tmp);
         }
         //case6
         tmp->parent->parent->color = RBTREE_RED;
         tmp->parent->color = RBTREE_BLACK;
-        right_rotate(t, tmp->parent->parent);
+        left_rotate(t, tmp->parent->parent);
       }
     }
   }
@@ -146,6 +163,13 @@ node_t *rbtree_find(const rbtree *t, const key_t key) {
   return t->root;
 }
 
+node_t *minimum(rbtree *t, node_t *x) {
+  while(x->left != NULL) {
+    x = x->left;
+  }
+  return x;
+}
+
 node_t *rbtree_min(const rbtree *t) {
   // TODO: implement find
   return t->root;
@@ -156,8 +180,64 @@ node_t *rbtree_max(const rbtree *t) {
   return t->root;
 }
 
+
 int rbtree_erase(rbtree *t, node_t *p) {
-  // TODO: implement erase
+  if (t->root==NULL){return 0;} //트리가 없으면 종료.
+  node_t* x=t->root;
+  node_t* y;  //y는 부모노드 
+  while(1){   //부모찾기 반복문
+      if (x->key > p->key){
+          if(x->left!=NULL){ 
+              y=x;
+              x = x->left;}
+          else{return 0;}}
+      else if (x->key < p->key){
+          if(x->right!=NULL){
+              y=x;
+              x = x->right;}
+          else{return 0;}}
+      /* else는 같을 경우 */
+      else {break;}
+      }
+  
+  if (p->left==NULL){
+      node_t* temp =p->right;
+      if (y->key > p->key){
+          y->left=temp;
+          free(p);
+      }
+      else if (y->key < p->key){
+          y->right=temp;
+          free(p);
+      }
+  }
+  else if (p->right==NULL){
+      node_t* temp=p->left;
+      if (y->key > p->key){
+          y->left=temp;
+          free(p);
+      }
+  
+      else if (y->key < p->key){
+          y->right=temp;
+          free(p);
+      }
+  }
+  else {
+      node_t* temp= p->right;  // successor 대상 찾기 (키 값 기준 오른쪽에서 가장 작은 값.)
+      node_t* p_d =NULL;       // successor의 부모노드.
+      while(temp->left!=NULL){
+      p_d=temp;
+      temp=temp->left;}
+      if (p_d!=NULL){  
+          p_d->left = temp->right;
+      }
+      else{ //succesor의 부모노드가 삭제 대상인 p인 경우. (p 바로 오른쪽 노드가 successor이고 successor는 왼쪽자식이 없는 상황 )
+          p->right=temp->right;
+      }
+      p->key=temp->key;
+      free(temp);
+  }
   return 0;
 }
 
