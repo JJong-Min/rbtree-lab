@@ -107,8 +107,8 @@ node_t *sibling(node_t *n) {
 
 void delete_node(node_t *p) {
   if (p != NULL) {
-    delete_node(p);
-    delete_node(p);
+    delete_node(p->left);
+    delete_node(p->right);
     free(p);
   }
 }
